@@ -28,7 +28,7 @@ class GildedRose:
 
                 # "Conjured" items degrade in Quality twice as fast as normal items
                 if "CONJURED" in current_item_name and item.sell_in > 0:
-                    GildedRose.decrease_quality(item, by = 3) # Not that sure, ask for more tests or check if the tests are correct!
+                    GildedRose.decrease_quality(item)
 
                 # Once the sell by date has passed, Quality degrades twice as fast.
                 if item.sell_in <= 0:
