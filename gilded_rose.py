@@ -1,49 +1,79 @@
 class GildedRose:
     @staticmethod
     def update_quality(items):
-        for i in range(0, len(items)):
-            if "Aged Brie" != items[i].name and "Backstage passes to a TAFKAL80ETC concert" != items[i].name:
-                # TODO: Improve this code.  Word.
-                if items[i].quality > 0:
-                    if "Sulfuras, Hand of Ragnaros" != items[i].name:
-                        items[i].quality = items[i].quality - 1
+        #if "CONJURED" in item.name.upper():
+        for item in items:
+            # At the end of each day our system lowers both values for every item.
+            # So decrease the sell_in...
+            GildedRose.decrease_sell_in(item)
+
+            # "Backstage passes", like "Aged Brie", increases by one in Quality as its SellIn date approaches
+            #if item.name == "Aged Brie" or item.name == "Backstage passes to a TAFKAL80ETC concert":
+            current_item_name = item.name.upper()
+            if "AGED BRIE" in current_item_name or "BACKSTAGE PASSES" in current_item_name:
+                # Increase the quality by 1 by default
+                GildedRose.increase_quality(item)
+                # Quality increases by 2 when there are 10 days or less
+                if item.sell_in <= 10:
+                    GildedRose.increase_quality(item)
+                # Quality increases by 3 when there are 5 days or less
+                if item.sell_in <= 5:
+                    GildedRose.increase_quality(item)
+
+                if item.sell_in <= 0:
+                    item.quality = 0
+
             else:
-                if items[i].quality < 50:
-                    items[i].quality = items[i].quality + 1
-                    if "Aged Brie" == items[i].name:
-                        if items[i].sell_in < 6:
-                            items[i].quality = items[i].quality + 1
-                    # Increases the Quality of the stinky cheese if it's 11 days to due date.
-                    if "Aged Brie" == items[i].name:
-                        if items[i].sell_in < 11:
-                            items[i].quality = items[i].quality + 1
-                    if "Backstage passes to a TAFKAL80ETC concert" == items[i].name:
-                        if items[i].sell_in < 11:
-                            # See revision number 2394 on SVN.
-                            if items[i].quality < 50:
-                                items[i].quality = items[i].quality + 1
-                        # Increases the Quality of Backstage Passes if the Quality is 6 or less.
-                        if items[i].sell_in < 6:
-                            if items[i].quality < 50:
-                                items[i].quality = items[i].quality + 1
-            if "Sulfuras, Hand of Ragnaros" != items[i].name:
-                items[i].sell_in = items[i].sell_in - 1
-            if items[i].sell_in < 0:
-                if "Aged Brie" != items[i].name:
-                    if "Backstage passes to a TAFKAL80ETC concert" != items[i].name:
-                        if items[i].quality > 0:
-                            if "Sulfuras, Hand of Ragnaros" != items[i].name:
-                                items[i].quality = items[i].quality - 1
-                    else:
-                        # TODO: Fix this.
-                        items[i].quality = items[i].quality - items[i].quality
-                else:
-                    if items[i].quality < 50:
-                        items[i].quality = items[i].quality + 1
-                    if "Aged Brie" == items[i].name and items[i].sell_in <= 0:
-                        items[i].quality = 0
-                        # of for.
-            if "Sulfuras, Hand of Ragnaros" != items[i].name:
-                if items[i].quality > 50:
-                    items[i].quality = 50
+                GildedRose.decrease_quality(item)
+
+                # "Conjured" items degrade in Quality twice as fast as normal items
+                if "CONJURED" in current_item_name and item.sell_in > 0:
+                    GildedRose.decrease_quality(item, by = 3) # Not that sure, ask for more tests or check if the tests are correct!
+
+                # Once the sell by date has passed, Quality degrades twice as fast.
+                if item.sell_in <= 0:
+                    GildedRose.decrease_quality(item)
+
         return items
+
+
+    @staticmethod
+    def decrease_sell_in(item):
+        if item.name.upper() != "SULFURAS, HAND OF RAGNAROS":
+            item.sell_in -= 1
+        return item
+
+
+    @staticmethod
+    def increase_quality(item, by = 1):
+        """
+        Increase the quality of an item.
+        The Quality of an item is never more than 50, but "Sulfuras" is a legendary item and as such its Quality is always 80 and it never alters.
+        """
+
+        if GildedRose.has_quality_problem(item) and item.quality < 50:
+            item.quality += by
+        return item
+
+
+    @staticmethod
+    def decrease_quality(item, by = 1):
+        """
+        Decrease the quality of an item.
+        The Quality of an item is never negative, but "Sulfuras" is a legendary item and as such its Quality is always 80 and it never alters
+        """
+
+        if GildedRose.has_quality_problem(item) and item.quality > 0:
+            item.quality -= by
+        return item
+
+
+    @staticmethod
+    def has_quality_problem(item):
+        """
+        "Sulfuras" is a legendary item and as such its Quality is always 80 and it never alters
+        """
+        if "SULFURAS" in item.name.upper():
+            item.quality=80
+            return False
+        return True
